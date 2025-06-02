@@ -1,16 +1,22 @@
-// app/(app)/index.tsx
+// app/(app)/profile.tsx
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../../context/AuthContext"; // Ajusta la ruta
 
-export default function HomeScreen() {
+export default function ProfileScreen() {
   const { user } = useAuth();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        ¡Bienvenido, {user?.username || "Usuario"}!
-      </Text>
-      <Text>Esta es la pantalla de inicio de tu aplicación.</Text>
+      <Text style={styles.title}>Tu Perfil</Text>
+      {user ? (
+        <>
+          <Text>ID: {user.id}</Text>
+          <Text>Usuario: {user.username}</Text>
+          <Text>Email: {user.email}</Text>
+        </>
+      ) : (
+        <Text>No hay información de usuario disponible.</Text>
+      )}
     </View>
   );
 }

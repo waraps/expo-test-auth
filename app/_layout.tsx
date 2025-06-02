@@ -1,29 +1,48 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+// app/_layout.tsx
+import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+function AppContent() {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  console.log(segments);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const inAuthGroup = segments[0] === "(auth)";
+
+      if (user && inAuthGroup) {
+        // Si el usuario está autenticado y está en el grupo (auth), redirige a la aplicación
+        router.replace("/(tabs)");
+        SplashScreen.hideAsync();
+      } else if (!user && !inAuthGroup) {
+        // Si el usuario no está autenticado y está en una ruta protegida, redirige al landing
+        router.replace("/(auth)/landing"); // ¡CAMBIO AQUÍ!
+        SplashScreen.hideAsync();
+      } else {
+        // Oculta el splash screen si no hay redirección inminente o si el estado ya está establecido
+        SplashScreen.hideAsync();
+      }
+    }
+  }, [user, isLoading, segments]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }
